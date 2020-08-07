@@ -1,0 +1,62 @@
+version: "3"
+
+services:
+  mengliHbase:
+    image: ${HbaseRepository}:${HbaseTAG}
+    container_name: mengliHbase
+    hostname: mengliHbase
+    ports:
+      - "16010:16010"
+      - "2181:2181"
+    restart: always
+  mengliES:
+    image: ${EsRepository}:${EsTAG}
+    container_name: mengliES
+    hostname: mengliES
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: always
+    volumes:
+      - "./elasticSearch/data:/usr/share/elasticsearch/data" # 创建并挂载目录之后,需要将当前目录的权限调整至 777,如果不调整
+      - "./elasticSearch/plugins:/usr/share/elasticsearch/plugins" # 会报一个java.nio.file.AccessDeniedException 错误
+  mengliJanusgraph:
+    image: ${JanusGraphRepository}:${JanusGraphTAG}
+    container_name: mengliJanusgraph
+    hostname: mengliJanusgraph
+    ports:
+      - "8182:8182"
+    depends_on:
+      - mengliES
+      - mengliHbase
+    restart: always
+    healthcheck:
+      test: ["CMD", "bin/gremlin.sh", "-e", "scripts/remote-connect.groovy"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+    volumes:
+      - "./janusgraph/resources/gremlin-server.yaml:/opt/janusgraph/conf/gremlin-server/gremlin-server.yaml"
+      - "./janusgraph/resources/janusgraph-hbase-es.properties:/opt/janusgraph/conf/gremlin-server/janusgraph-hbase-es.properties"
+      - "./shells/wait-for-it.sh:/wait-for-it.sh"
+    command: /wait-for-it.sh mengliES:9200 -t 60 -- ./bin/gremlin-server.sh
+  mengliKibana:
+    image: ${KibanaRepository}:${EsTAG}
+    container_name: mengliKibana
+    hostname: mengliKibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - mengliES
+    restart: always
+    volumes:
+      - "./shells/wait-for-it.sh:/wait-for-it.sh"
+    command: /wait-for-it.sh mengliES:9200 -t 60 -- kibana -e http://mengliES:9200
+  mengliEsHead:
+    image: ${EsHeadRepository}
+    container_name: mengliEsHead
+    hostname: mengliEsHead
+    restart: always
+    ports:
+      - 9100:9100
+    # 启动EsHead之后,在地址栏修改一下地址即可。

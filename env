@@ -1,0 +1,12 @@
+# 使用的时候，需要将文件命名为： .env
+# Hbase相关
+HbaseRepository=harisekhon/hbase
+HbaseTAG=1.4
+# ES相关
+EsRepository=elasticsearch
+KibanaRepository=kibana
+EsHeadRepository=mobz/elasticsearch-head:5
+EsTAG=6.5.1
+# JanusGraph相关
+JanusGraphRepository=janusgraph/janusgraph
+JanusGraphTAG=0.3.1
