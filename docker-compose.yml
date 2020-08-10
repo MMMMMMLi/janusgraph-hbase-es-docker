@@ -17,6 +17,8 @@ services:
       - "9200:9200"
       - "9300:9300"
     restart: always
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     volumes:
       - "./elasticSearch/data:/usr/share/elasticsearch/data" # 创建并挂载目录之后,需要将当前目录的权限调整至 777,如果不调整
       - "./elasticSearch/plugins:/usr/share/elasticsearch/plugins" # 会报一个java.nio.file.AccessDeniedException 错误
@@ -59,4 +61,3 @@ services:
     restart: always
     ports:
       - 9100:9100
-    # 启动EsHead之后,在地址栏修改一下地址即可。
